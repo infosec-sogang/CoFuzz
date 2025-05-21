@@ -2,6 +2,8 @@ import atexit
 import shutil
 import tempfile
 import time
+import csv
+import os
 from collections import defaultdict
 from pathlib import Path
 
@@ -35,8 +37,21 @@ class HybridExecutor:
         self.crash_cnt = 0
         self.hang_cnt = 0
 
+        self.start_time=time.time()
+
     def __clean_temp_dir(self):
         shutil.rmtree(self.tmp_dir)
+
+    # Code added to record the exact time of seed generation (using the Linux
+    # timestamp yields imprecise result for some seeds in the queue).
+    def record_time(self,path,seed_name):
+        current_time=time.time()
+        elapsed_time=int(current_time-self.start_time)
+        new_path=os.path.join(self.concolic_queue,"../tc_birth.csv") # Need fix
+        seed_path=os.path.join(path,seed_name)
+        with open(new_path,mode="a") as f:
+            writer = csv.writer(f)
+            writer.writerow([seed_name,elapsed_time])
 
     def __seek_trace_seeds(self):
         """Construct the trace corpus"""
@@ -58,6 +73,7 @@ class HybridExecutor:
                 queue_idx = self.interesting_cnt
                 seed_path = self.concolic_queue.joinpath('id:%06d,src:%s,op:%s' % (queue_idx, src_id, op))
                 shutil.copy2(testcase, seed_path)
+                self.record_time(self.concolic_queue,seed_path)        #record the time of execution
                 self.logger.info(f'Interesting seed {seed_path.name}')
                 self.interesting_cnt += 1
         elif ret == 1:
@@ -75,7 +91,9 @@ class HybridExecutor:
         return cov_increase
 
     def __solve_seed(self, seed_input):
+        fp=open("symcc.log","a")
         """Solve the seed by concolic execution"""
+        st=time.time()
         seed_name = seed_input.name
         if seed_name in self.depot.solved_seeds:
             return
@@ -92,6 +110,7 @@ class HybridExecutor:
         self.logger.info(f'Generate {len(testcases)} testcases')
         self.logger.info(f'{self.interesting_cnt - cur_cnt} testcases are new')
         self.depot.solved_seeds.add(seed_name)
+        et=time.time()
 
     def __crack_seed(self, seed_input, crack_addr):
         """Crack the seed by sampler"""

@@ -7,7 +7,7 @@
 	branch = cohyzz
 [submodule "fuzzer"]
 	path = fuzzer
-	url = https://github.com/Tricker-z/AFL.git
+	url = https://github.com/infosec-sogang/AFL-public.git
 	branch = cohyzz
 [submodule "third_party/z3"]
 	path = third_party/z3
