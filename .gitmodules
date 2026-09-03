@@ -8,7 +8,7 @@
 [submodule "fuzzer"]
 	path = fuzzer
 	url = https://github.com/infosec-sogang/AFL-public.git
-	branch = cohyzz
+	branch = cofuzz
 [submodule "third_party/z3"]
 	path = third_party/z3
 	url = https://github.com/Z3Prover/z3.git
